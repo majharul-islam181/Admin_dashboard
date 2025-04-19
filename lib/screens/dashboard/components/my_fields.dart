@@ -10,7 +10,9 @@ import 'dart:typed_data';
 import '../../../constants.dart';
 import 'file_info_card.dart';
 
-Uint8List? _webImageBytes; // Add this at the top of your state class
+// Uint8List? _webImageBytes; // Add this at the top of your state class
+List<Uint8List> _webImageBytesList = [];
+
 
 class MyFiles extends StatelessWidget {
   const MyFiles({
@@ -229,74 +231,65 @@ class _AddProductDialogState extends State<AddProductDialog> {
   }
 
   Widget _buildImagePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Product Image"),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            ElevatedButton.icon(
-              onPressed: _pickImage,
-              icon: const Icon(Icons.upload),
-              label: const Text("Upload Image"),
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text("Product Images"),
+      const SizedBox(height: 8),
+      ElevatedButton.icon(
+        onPressed: _pickImage,
+        icon: const Icon(Icons.upload),
+        label: const Text("Upload Images"),
+      ),
+      const SizedBox(height: 12),
+      Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: _webImageBytesList.map((imageData) {
+          return Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(width: 12),
-            if (_webImageBytes != null)
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.memory(_webImageBytes!, fit: BoxFit.cover),
-                ),
-              ),
-            // if (_pickedImage != null)
-            //   if (_pickedImage != null)
-            //     Image.file(_pickedImage!,
-            //         width: 80, height: 80, fit: BoxFit.cover)
-            //   else if (_webImageBytes != null)
-            //     Image.memory(_webImageBytes!,
-            //         width: 80, height: 80, fit: BoxFit.cover)
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.memory(imageData, fit: BoxFit.cover),
+            ),
+          );
+        }).toList(),
+      ),
+    ],
+  );
+}
 
-            // Container(
-            //   width: 80,
-            //   height: 80,
-            //   decoration: BoxDecoration(
-            //     border: Border.all(color: Colors.grey),
-            //     borderRadius: BorderRadius.circular(8),
-            //   ),
-            //   child: ClipRRect(
-            //     borderRadius: BorderRadius.circular(8),
-            //     child: Image.file(_pickedImage!, fit: BoxFit.cover),
-            //   ),
-            // ),
-          ],
-        ),
-      ],
-    );
-  }
+
 
   Future<void> _pickImage() async {
-    final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
-    uploadInput.click();
+  final uploadInput = html.FileUploadInputElement()
+    ..accept = 'image/*'
+    ..multiple = true; // ✅ enable multiple files
+  uploadInput.click();
 
-    uploadInput.onChange.listen((event) {
-      final file = uploadInput.files?.first;
+  uploadInput.onChange.listen((event) {
+    final files = uploadInput.files;
+    if (files == null || files.isEmpty) return;
+
+    _webImageBytesList.clear(); // Optional: reset previous images
+
+    for (final file in files) {
       final reader = html.FileReader();
-
-      reader.readAsArrayBuffer(file!);
-      reader.onLoadEnd.listen((e) {
+      reader.readAsArrayBuffer(file);
+      reader.onLoadEnd.listen((event) {
         setState(() {
-          _webImageBytes = reader.result as Uint8List;
+          _webImageBytesList.add(reader.result as Uint8List);
         });
       });
-    });
-  }
+    }
+  });
+}
+
 
   Widget _buildTimePickerField() {
     return Padding(
@@ -338,6 +331,8 @@ class _AddProductDialogState extends State<AddProductDialog> {
       ),
     );
   }
+
+
 }
 
 class FileInfoCardGridView extends StatelessWidget {
