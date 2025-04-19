@@ -1,17 +1,14 @@
 import 'dart:io';
-
 import 'package:admin/models/my_files.dart';
 import 'package:admin/responsive.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:html' as html;
 import 'dart:typed_data';
 
 import '../../../constants.dart';
 import 'file_info_card.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:html' as html; // For web-specific fixes if needed
 
 Uint8List? _webImageBytes; // Add this at the top of your state class
 
@@ -124,18 +121,20 @@ class _AddProductDialogState extends State<AddProductDialog> {
                         children: [
                           Expanded(
                               child: _buildTextField(
-                                  _priceController, "Price", true,
+                                  _priceController, "Price ৳", true,
                                   isNumber: true)),
                           const SizedBox(width: 16),
                           Expanded(
                               child: _buildTextField(
-                                  _discountController, "Discount", false,
+                                  _discountController, "Discount %", false,
                                   isNumber: true)),
                         ],
                       ),
                       _buildDropdownCategory(),
-                      _buildTextField(
-                          _prepTimeController, "Preparation Time", false),
+                      // _buildTextField(
+                      //     _prepTimeController, "Preparation Time", false),
+                      _buildTimePickerField(),
+
                       _buildTextField(_tagsController,
                           "Tags / Ingredients (comma separated)", false),
                       _buildAvailabilitySwitch(),
@@ -172,13 +171,22 @@ class _AddProductDialogState extends State<AddProductDialog> {
   }
 
   Widget _buildTextField(
-      TextEditingController controller, String label, bool required,
-      {bool isNumber = false, int maxLines = 1}) {
+    TextEditingController controller,
+    String label,
+    bool required, {
+    bool isNumber = false,
+    int maxLines = 1,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        keyboardType: isNumber
+            ? const TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.text,
+        inputFormatters: isNumber
+            ? [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))]
+            : [],
         maxLines: maxLines,
         validator: required
             ? (value) =>
@@ -187,6 +195,8 @@ class _AddProductDialogState extends State<AddProductDialog> {
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
+          filled: true,
+          fillColor: Colors.black,
         ),
       ),
     );
@@ -286,6 +296,47 @@ class _AddProductDialogState extends State<AddProductDialog> {
         });
       });
     });
+  }
+
+  Widget _buildTimePickerField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: TextFormField(
+        controller: _prepTimeController,
+        readOnly: true,
+        onTap: () async {
+          TimeOfDay? time = await showTimePicker(
+            context: context,
+            initialTime:
+                const TimeOfDay(hour: 0, minute: 15), // default 15 mins
+            builder: (context, child) {
+              return MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(alwaysUse24HourFormat: true),
+                child: child!,
+              );
+            },
+          );
+
+          if (time != null) {
+            final durationText = time.hour > 0
+                ? "${time.hour}h ${time.minute}m"
+                : "${time.minute} mints";
+
+            setState(() {
+              _prepTimeController.text = durationText;
+            });
+          }
+        },
+        decoration: const InputDecoration(
+          labelText: "Preparation Time",
+          border: OutlineInputBorder(),
+          filled: true,
+          fillColor: Colors.black,
+          suffixIcon: Icon(Icons.access_time),
+        ),
+      ),
+    );
   }
 }
 
