@@ -1,5 +1,8 @@
+import 'package:admin/controllers/menu_app_controller.dart';
+import 'package:admin/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 
 class SideMenu extends StatelessWidget {
   const SideMenu({
@@ -17,28 +20,24 @@ class SideMenu extends StatelessWidget {
           DrawerListTile(
             title: "Dashboard",
             svgSrc: "assets/icons/menu_dashboard.svg",
-            press: () {},
+             press: () {
+              context.read<MenuAppController>().setMenuIndex(0);
+              if (!Responsive.isDesktop(context)) Navigator.pop(context);
+            },
           ),
           DrawerListTile(
             title: "Transaction",
             svgSrc: "assets/icons/menu_tran.svg",
-            press: () {},
+            press: () {
+              // context.read<MenuAppController>().setMenuIndex(1);
+              // if (!Responsive.isDesktop(context)) Navigator.pop(context);
+            },
           ),
           DrawerListTile(
             title: "Order History",
             svgSrc: "assets/icons/menu_task.svg",
             press: () {},
           ),
-          // DrawerListTile(
-          //   title: "Documents",
-          //   svgSrc: "assets/icons/menu_doc.svg",
-          //   press: () {},
-          // ),
-          // DrawerListTile(
-          //   title: "Store",
-          //   svgSrc: "assets/icons/menu_store.svg",
-          //   press: () {},
-          // ),
           DrawerListTile(
             title: "Notification",
             svgSrc: "assets/icons/menu_notification.svg",
@@ -52,7 +51,10 @@ class SideMenu extends StatelessWidget {
           DrawerListTile(
             title: "Settings",
             svgSrc: "assets/icons/menu_setting.svg",
-            press: () {},
+            press: () {
+              context.read<MenuAppController>().setMenuIndex(1);
+              if (!Responsive.isDesktop(context)) Navigator.pop(context);
+            },
           ),
         ],
       ),
